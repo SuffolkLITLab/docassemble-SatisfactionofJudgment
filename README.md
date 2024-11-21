@@ -1,4 +1,4 @@
-# SuffolkLITLab/SatisfactionofJudgment
+# SuffolkLITLab/docassemble-SatisfactionofJudgment
 
 Satisfaction of Judgment
 
