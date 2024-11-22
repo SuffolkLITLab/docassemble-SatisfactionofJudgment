@@ -89,6 +89,13 @@ code: |
   nav.set_section("plaintiff_certification")
   is_plaintiff
   set_progress(32)
+  plaintiffs1_signature_date = today()
+  if users[1]:
+    plaintiffs2_signature_date = today()
+  else:
+    plaintiffs2_signature_date = ""
+  plaintiffs3_signature_date = ""
+  plaintiffs4_signature_date = ""
   
   # Branching based on representation
   plaintiffs1_represented_by_attorney
@@ -153,18 +160,6 @@ subquestion: |
 fields:
   - "Yes, I am (we are) the plaintiff(s) in the above-listed small claim or civil action.": is_plaintiff
     datatype: yesno
-  - "First plaintiff's signature date": plaintiffs1_signature_date
-    datatype: date
-  - "Second plaintiff's signature date": plaintiffs2_signature_date
-    datatype: date
-    required: False
-  - "Third plaintiff's signature date": plaintiffs3_signature_date
-    datatype: date
-    required: False
-  - "Fourth plaintiff's signature date": plaintiffs4_signature_date
-    datatype: date
-    required: False
----
 ---
 id: plaintiffs1_represented_by_attorney
 question: |
@@ -197,7 +192,6 @@ fields:
     datatype: yesno
   - "First attorney's signature date": attorneys1_signature_date
     datatype: date
-    required: False
   - "First attorney's BBO number": attorneys1_bbo_number
     maxlength: 6
     required: False
