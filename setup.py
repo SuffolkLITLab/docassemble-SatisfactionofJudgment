@@ -1,6 +1,6 @@
 import os
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
 
@@ -44,16 +44,15 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.SatisfactionofJudgment',
-      version='1.0',
+      version='2.0',
       description=('Satisfaction of Judgment'),
-      long_description='# SuffolkLITLab/SatisfactionofJudgment\r\n\r\nSatisfaction of Judgment\r\n\r\nNicole Dimitri\r\n',
+      long_description='# SuffolkLITLab/docassemble-SatisfactionofJudgment\r\n\r\nSatisfaction of Judgment\r\n\r\nNicole Dimitri\r\n',
       long_description_content_type='text/markdown',
       author='Nicole Dimitri',
       author_email='Nicole.Dimitri@su.suffolk.edu',
       license='The MIT License',
       url='https://courtformsonline.org',
-      packages=find_packages(),
-      namespace_packages=['docassemble'],
+      packages=find_namespace_packages(),
       install_requires=['docassemble.SatisfactionofJudgment'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/SatisfactionofJudgment/', package='docassemble.SatisfactionofJudgment'),
