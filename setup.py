@@ -46,7 +46,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 setup(name='docassemble.SatisfactionofJudgment',
       version='2.0',
       description=('Satisfaction of Judgment'),
-      long_description='# SuffolkLITLab/docassemble-SatisfactionofJudgment\r\n\r\nSatisfaction of Judgment\r\n\r\nNicole Dimitri\r\n',
+      long_description='# docassemble.SatisfactionofJudgment\n\nSatisfaction of Judgment\n\n## Author\n\nNicole.Dimitri@su.suffolk.edu\n\n',
       long_description_content_type='text/markdown',
       author='Nicole Dimitri',
       author_email='Nicole.Dimitri@su.suffolk.edu',
