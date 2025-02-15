@@ -44,16 +44,16 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.SatisfactionofJudgment',
-      version='2.0',
+      version='1.0',
       description=('Satisfaction of Judgment'),
-      long_description='# docassemble.SatisfactionofJudgment\n\nSatisfaction of Judgment\n\n## Author\n\nNicole.Dimitri@su.suffolk.edu\n\n',
+      long_description='# docassemble.SatisfactionofJudgment\r\n\r\nSatisfaction of Judgment\r\n\r\n## Author\r\n\r\nNicole Dimitri\r\n\r\n',
       long_description_content_type='text/markdown',
       author='Nicole Dimitri',
       author_email='Nicole.Dimitri@su.suffolk.edu',
       license='The MIT License',
       url='https://courtformsonline.org',
       packages=find_namespace_packages(),
-      install_requires=['docassemble.SatisfactionofJudgment'],
+      install_requires=['docassemble.AssemblyLine>=3.2.0'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/SatisfactionofJudgment/', package='docassemble.SatisfactionofJudgment'),
      )

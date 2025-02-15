@@ -1,45 +1,23 @@
 ---
-objects:
-  - satisfaction_of_judgment_attachment: ALDocument.using(
-      title="Satisfaction of Judgment",
-      filename="satisfaction_of_judgment",
-      has_addendum=False,
-      enabled=True,
-      pdf_template_file="satisfaction_of_judgment.pdf")
-
-  - al_user_bundle: ALDocumentBundle.using(
-      elements=[satisfaction_of_judgment_attachment],
-      filename="satisfaction_of_judgment",
-      title="All forms to download for your records",
-      enabled=True)
-
-  - al_court_bundle: ALDocumentBundle.using(
-      elements=[satisfaction_of_judgment_attachment],
-      filename="satisfaction_of_judgment",
-      title="All forms to deliver to court",
-      enabled=True)
----
 include:
   - docassemble.AssemblyLine:assembly_line.yml
   - docassemble.MassAccess:massaccess.yml
 ---
 metadata:
-  title: Acknowledgment of Satisfaction of Judgment
-  short title: Satisfaction of Judgment
-  description: |
-    This interview helps a plaintiff landlord in Massachusetts file a Satisfaction of Judgment.
+  title: >-
+    Acknowledgement of Satisfaction of Judgment
+  short title: >-
+    Satisfaction of Judgment
+  description: |-
+    This interview helps a plaintiff landlord in Massachusetts file an Acknowledgement of Satisfaction of Judgment.
   can_I_use_this_form: |
     If you are a Massachusetts landlord who filed a case against a former tenant and received a judgment for their nonpayment of rent, you can use this form to let the court know that the tenant has since repaid the rent they owed.
   before_you_start: |
     Before you get started, you will need to know:
-    
+
     - The court where the rent judgment was issued  
     - The docket number of the rent judgment case  
     - The date when the court issued the rent judgment  
-
-    If you are represented by an attorney, they will need to sign their name and provide their BBO number.
-
-    Most people take about 15 minutes to complete this interview.
 
   maturity: production
   estimated_completion_minutes: 15
@@ -54,12 +32,15 @@ metadata:
     - "HO-06-00-00-00"
   authors:
     - Nicole Dimitri
+  original_form: []
+  original_form_published_on: ""
   allowed_courts: 
     - "Boston Municipal Court"
     - "District Court"
     - "Housing Court"
   typical_role: "plaintiff"
   al_weaver_version: "1.11.0"
+  generated_on: "2025-02-14"
   languages:
     - en
   jurisdiction: NAM-US-US+MA
@@ -67,7 +48,11 @@ metadata:
   form_titles:
     - Satisfaction of Judgment
   form_numbers: []
-  update_notes: |
+---
+code: |
+  # Default country and state settings
+  AL_DEFAULT_COUNTRY = "US"
+  AL_DEFAULT_STATE = "MA"
 ---
 code: |
   github_repo_name = 'docassemble-SatisfactionofJudgment'
@@ -87,24 +72,21 @@ subquestion: |
   This interview helps a plaintiff file an Acknowledgment of Satisfaction of Judgment in Massachusetts.
 
   **Before you begin, you will need to know:**
-  
+
   - The court where the rent judgment was issued  
   - The docket number of the rent judgment case  
   - The date when the court issued the rent judgment  
 
-    If you are represented by an attorney, they will need to sign their name and provide their BBO number.
+  If you are represented by an attorney, they will need to sign their name and provide their BBO number.
 
   Click **Next** to begin the interview.
-  
 continue button field: satisfaction_of_judgment_intro_done
 ---
-mandatory: True
+mandatory: true
 code: |
-  download_ready = False
-  
   plaintiffs_list = ", ".join([p.name.full() for p in plaintiffs.complete_elements()]) if plaintiffs.complete_elements() else ""
   defendants_list = ", ".join([d.name.full() for d in defendants.complete_elements()]) if defendants.complete_elements() else ""
-  
+
   al_intro_screen
   plaintiffs.gather()
   defendants.gather()
@@ -113,26 +95,51 @@ code: |
   judgment_date
   review_satisfaction_of_judgment_done
 
+  # Ensure we capture whether the plaintiff has an attorney
   if not defined("plaintiff_represented"):
       plaintiff_represented
 
+  # If represented, ensure we gather attorneys safely
   if plaintiff_represented == "Yes":
       attorneys.gather()
-      attorneys[0].certify_attorney
-      if not defined("attorneys[0].signature"):
-          attorneys[0].signature
-      attorneys[0].signature_date = today() if not defined("attorneys[0].signature_date") else attorneys[0].signature_date
-      attorneys[0].bbo_number
+      
+      if attorneys.complete_elements():  # Only process attorneys if they exist
+          attorneys[0].certify_attorney = True  # Ensure at least one attorney certifies
+          if not defined("attorneys[0].signature"):
+              attorneys[0].signature
+          attorneys[0].signature_date = today() if not defined("attorneys[0].signature_date") else attorneys[0].signature_date
+          attorneys[0].bbo_number
+      else:
+          attorneys.there_are_any = False  # No attorneys to collect
+
   else:
-      plaintiffs[0].certify_plaintiff
-      if not defined("plaintiffs[0].signature"):
-          plaintiffs[0].signature
-      plaintiffs[0].signature_date = today() if not defined("plaintiffs[0].signature_date") else plaintiffs[0].signature_date
-  
-  if (plaintiff_represented == "No" and defined("plaintiffs[0].signature")) or \
-     (plaintiff_represented == "Yes" and defined("attorneys[0].signature")):
+      attorneys.there_are_any = False  # If self-represented, skip attorneys
+
+  # Ensure first plaintiff certifies
+  if plaintiffs.complete_elements():  
+      plaintiffs[0].certify_plaintiff = True
+
+  # Gather signatures for all plaintiffs safely
+  for i in range(len(plaintiffs.complete_elements())):
+      if not defined(f"plaintiffs[{i}].signature"):
+          plaintiffs[i].signature
+      plaintiffs[i].signature_date = today() if not defined(f"plaintiffs[{i}].signature_date") else plaintiffs[i].signature_date
+
+  # Gather signatures for all attorneys (only if represented)
+  if plaintiff_represented == "Yes" and attorneys.complete_elements():
+      for i in range(len(attorneys.complete_elements())):
+          if not defined(f"attorneys[{i}].signature"):
+              attorneys[i].signature
+          attorneys[i].signature_date = today() if not defined(f"attorneys[{i}].signature_date") else attorneys[i].signature_date
+
+  # Ensure all required signatures before allowing download
+  total_signatures_needed = len(plaintiffs.complete_elements()) + (len(attorneys.complete_elements()) if plaintiff_represented == "Yes" else 0)
+  total_signatures_collected = sum(1 for i in range(len(plaintiffs.complete_elements())) if defined(f"plaintiffs[{i}].signature"))
+  total_signatures_collected += sum(1 for i in range(len(attorneys.complete_elements())) if plaintiff_represented == "Yes" and defined(f"attorneys[{i}].signature"))
+
+  if total_signatures_collected >= total_signatures_needed:
       download_ready = True
-      satisfaction_of_judgment_download
+      satisfaction_of_judgment_download  # Ensure transition to the final screen
 ---
 objects:
   - plaintiffs: ALPeopleList.using(there_are_any=True, complete_attribute="name.first", gather_minimum=1)
@@ -144,8 +151,8 @@ sections:
   - intro_section: Introduction
   - case_information: Case information
   - review_satisfaction_of_judgment: Review your answers
-  - plaintiff_certification: Plaintiff certifications
-  - attorney_certification: Attorney certifications
+  - plaintiff_certification: Plaintiff certification
+  - attorney_certification: Attorney certification
   - sign_satisfaction_of_judgment: Sign your form
   - download_satisfaction_of_judgment: Download your form
 ---
@@ -162,12 +169,11 @@ fields:
 id: plaintiffs.there_are_any
 section: case_information
 question: |
-  Are there any additional plaintiffs in the case?
+  Are there any additional plaintiffs in your case?
 subquestion: |
   If there are multiple plaintiffs, list their names here.
 yesno: plaintiffs.there_are_any
 depends on: plaintiffs_gathered
-visible if: not defined("plaintiffs_name_collected")
 ---
 id: defendants_name
 section: case_information
@@ -245,24 +251,6 @@ fields:
     datatype: date
     required: true
 ---
-id: preview_satisfaction_of_judgment
-question: |
-  Preview your form before you sign it
-subquestion: |
-  If the form looks correct, you can sign it on the next page.
-  
-  ${ al_court_bundle.as_pdf(key='preview') }
-
-  Click the image to open it in a new tab. Click "Edit answers" to edit your answers.
-
-  ${ action_button_html(url_action('review_satisfaction_of_judgment'), label='Edit answers', color='info') }
-  
-  Remember to come back to this window to sign your form.
-continue button field: satisfaction_of_judgment_preview_question    
----
-code: |
-  signature_fields = ['plaintiffs[0].signature', 'plaintiffs[1].signature', 'plaintiffs[2].signature', 'plaintiffs[3].signature', 'attorneys[0].signature', 'attorneys[1].signature']
----
 id: satisfaction_of_judgment_review_screen
 event: review_satisfaction_of_judgment
 mandatory: true
@@ -270,22 +258,21 @@ question: |
   Review your answers before certification
 subquestion: |
   Click "Edit" if you need to make any changes.  
-  **Once you proceed to certifications and signatures, you will not be able to edit these answers.**
 review:
-  - Edit: trial_court.division
-    button: "**Trial court division:** ${ trial_court.division }"
   - Edit: docket_number
-    button: "**Docket number:** ${ docket_number }"
+    button: "**Docket number**: ${ docket_number }"
+  - Edit: trial_court.division
+    button: "**Trial court**: ${ trial_court.division if defined('trial_court.division') else '' }"
   - Edit: judgment_date
-    button: "**Judgment date:** ${ judgment_date }"
+    button: "**Judgment date**: ${ judgment_date }"
   - Edit: plaintiffs[0].name.first
-    button: "**First plaintiff:** ${ plaintiffs[0].name.full() }"
+    button: "**First plaintiff**: ${ plaintiffs[0].name.full() }"
   - Edit: plaintiffs.there_are_any
-    button: "**Additional plaintiffs:** ${ 'Yes' if plaintiffs.there_are_any and len(plaintiffs.complete_elements()) > 1 else 'No' }"
+    button: "**Additional plaintiffs**: ${ 'Yes' if plaintiffs.there_are_any and len(plaintiffs.complete_elements()) > 1 else 'No' }"
   - Edit: defendants[0].name.first
-    button: "**First defendant:** ${ defendants[0].name.full() }"
+    button: "**First defendant**: ${ defendants[0].name.full() }"
   - Edit: defendants.there_are_any
-    button: "**Additional defendants:** ${ 'Yes' if defendants.there_are_any and len(defendants.complete_elements()) > 1 else 'No' }"
+    button: "**Additional defendants**: ${ 'Yes' if defendants.there_are_any and len(defendants.complete_elements()) > 1 else 'No' }"
 continue button field: review_satisfaction_of_judgment_done
 ---
 id: plaintiff_represented
@@ -360,74 +347,90 @@ fields:
     required: true
 continue button field: attorney_certification_complete
 ---
-mandatory: True
-code: |
-  if (plaintiff_represented == "No" and defined("plaintiffs[0].signature")) or \
-     (plaintiff_represented == "Yes" and defined("attorneys[0].signature")):
-      download_ready = True  
+id: preview satisfaction_of_judgment
+question: |
+  Preview your form before you sign it
+subquestion: |
+  Here is a preview of the form you will sign on the next page.
+
+  ${ al_court_bundle.as_pdf(key='preview') }
+
+  Click the image to open it in a new tab. Click the "Edit answers" button to edit your answers.
+  
+  ${ action_button_html(url_action('review_satisfaction_of_judgment'), label='Edit answers', color='info') }
+
+  Remember to come back to this window to continue and sign your form.
+
+continue button field: satisfaction_of_judgment_preview_question
 ---
-id: download_form
-section: download_satisfaction_of_judgment
+code: |
+  signature_fields = ['plaintiffs[0].signature', 'plaintiffs[1].signature', 'plaintiffs[2].signature', 'plaintiffs[3].signature', 'attorneys[0].signature', 'attorneys[1].signature']
+---
+code: |
+  [user.address.address for user in users.complete_elements()]
+  addresses_to_search = [user.address for user in users.complete_elements()]
+---
+id: download satisfaction_of_judgment
 event: satisfaction_of_judgment_download
 question: |
-  Your form is ready to download and deliver.
+  All done.
 subquestion: |
-  Click **Edit answers** to make changes or download your form below.
+  Your form is ready to download and deliver.
+  
+  View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
 
   ${ action_button_html(url_action('review_satisfaction_of_judgment'), label='Edit answers', color='info') }
   
   ${ al_user_bundle.download_list_html() }
+  
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
 
-  ${ al_user_bundle.send_button_html() }
-
-attachments:
-  - satisfaction_of_judgment_attachment
-visible if: download_ready  
-buttons:
-  - "Download form": satisfaction_of_judgment_download
 progress: 100
-continue button field: go_to_exit
+---
+objects:
+  - satisfaction_of_judgment_attachment: ALDocument.using(title="Satisfaction of Judgment", filename="satisfaction_of_judgment", enabled=True, has_addendum=False, )
+  - al_user_bundle: ALDocumentBundle.using(elements=[satisfaction_of_judgment_attachment], filename="satisfaction_of_judgment", title="All forms to download for your records", enabled=True)
+  - al_court_bundle: ALDocumentBundle.using(elements=[satisfaction_of_judgment_attachment],  filename="satisfaction_of_judgment", title="All forms to deliver to court", enabled=True)
 ---
 attachment:
-  name: satisfaction of judgment
+  name: Satisfaction of Judgment
   filename: satisfaction_of_judgment
-  variable name: satisfaction_of_judgment_attachment  
+  variable name: satisfaction_of_judgment_attachment[i]
   pdf template file: satisfaction_of_judgment.pdf
-  skip undefined: True
   fields:
-    - "docket_number": ${ docket_number }
-    - "trial_court_division": ${ trial_court.division }
-    - "judgment_date": ${ judgment_date.format() }
-    - "plaintiffs_list": ${ plaintiffs_list }
-    - "defendants_list": ${ defendants_list }
-    
-    - "plaintiffs1_name_full": ${ plaintiffs[0].name.full() }
-    - "plaintiffs1_signature": ${ plaintiffs[0].signature if defined("plaintiffs[0].signature") else "" }
-    - "plaintiffs1_signature_date": ${ plaintiffs[0].signature_date.format() if defined("plaintiffs[0].signature_date") else "" }
-    
-    - "plaintiffs2_name_full": ${ plaintiffs[1].name.full() if defined("plaintiffs[1].name.full()") else "" }
-    - "plaintiffs2_signature": ${ plaintiffs[1].signature if defined("plaintiffs[1].signature") else "" }
-    - "plaintiffs2_signature_date": ${ plaintiffs[1].signature_date.format() if defined("plaintiffs[1].signature_date") else "" }
-
-    - "plaintiffs3_name_full": ${ plaintiffs[2].name.full() if defined("plaintiffs[2].name.full()") else "" }
-    - "plaintiffs3_signature": ${ plaintiffs[2].signature if defined("plaintiffs[2].signature") else "" }
-    - "plaintiffs3_signature_date": ${ plaintiffs[2].signature_date.format() if defined("plaintiffs[2].signature_date") else "" }
-
-    - "plaintiffs4_name_full": ${ plaintiffs[3].name.full() if defined("plaintiffs[3].name.full()") else "" }
-    - "plaintiffs4_signature": ${ plaintiffs[3].signature if defined("plaintiffs[3].signature") else "" }
-    - "plaintiffs4_signature_date": ${ plaintiffs[3].signature_date.format() if defined("plaintiffs[3].signature_date") else "" }
-    
-    - "attorneys1_name_full": ${ attorneys[0].name.full() if attorneys.there_are_any else "" }
-    - "attorneys1_signature": ${ attorneys[0].signature if defined("attorneys[0].signature") else "" }
-    - "attorneys1_signature_date": ${ attorneys[0].signature_date.format() if defined("attorneys[0].signature_date") else "" }
-    - "attorneys1_bbo_number": ${ attorneys[0].bbo_number if defined("attorneys[0].bbo_number") else "" }
-
-    - "attorneys2_name_full": ${ attorneys[1].name.full() if attorneys.there_are_any else "" }
-    - "attorneys2_signature": ${ attorneys[1].signature if defined("attorneys[1].signature") else "" }
-    - "attorneys2_signature_date": ${ attorneys[1].signature_date.format() if defined("attorneys[1].signature_date") else "" }
-    - "attorneys2_bbo_number": ${ attorneys[1].bbo_number if defined("attorneys[1].bbo_number") else "" }
-
-    - "plaintiffs1_certify_plaintiff": ${ "Yes" if plaintiffs[0].certify_plaintiff else "No" }
-    - "attorneys1_certify_attorney": ${ "Yes" if attorneys[0].certify_attorney else "No" }
----
+  - "docket_number": ${ docket_number }
+  - "trial_court_division": ${ trial_court.division }
+  - "judgment_date": ${ judgment_date.format() }
   
+  - "plaintiffs_list": ${ plaintiffs_list }
+  - "defendants_list": ${ defendants_list }
+  
+  - "plaintiffs1_name_full": ${ plaintiffs[0].name.full() }
+  - "plaintiffs1_signature": ${ plaintiffs[0].signature if defined("plaintiffs[0].signature") else "" }
+  - "plaintiffs1_signature_date": ${ plaintiffs[0].signature_date.format() if defined("plaintiffs[0].signature_date") else "" }
+  
+  - "plaintiffs2_name_full": ${ plaintiffs[1].name.full() if defined("plaintiffs[1].name.full()") else "" }
+  - "plaintiffs2_signature": ${ plaintiffs[1].signature if defined("plaintiffs[1].signature") else "" }
+  - "plaintiffs2_signature_date": ${ plaintiffs[1].signature_date.format() if defined("plaintiffs[1].signature_date") else "" }
+  
+  - "plaintiffs3_name_full": ${ plaintiffs[2].name.full() if defined("plaintiffs[2].name.full()") else "" }
+  - "plaintiffs3_signature": ${ plaintiffs[2].signature if defined("plaintiffs[2].signature") else "" }
+  - "plaintiffs3_signature_date": ${ plaintiffs[2].signature_date.format() if defined("plaintiffs[2].signature_date") else "" }
+  
+  - "plaintiffs4_name_full": ${ plaintiffs[3].name.full() if defined("plaintiffs[3].name.full()") else "" }
+  - "plaintiffs4_signature": ${ plaintiffs[3].signature if defined("plaintiffs[3].signature") else "" }
+  - "plaintiffs4_signature_date": ${ plaintiffs[3].signature_date.format() if defined("plaintiffs[3].signature_date") else "" }
+  
+  - "attorneys1_name_full": ${ attorneys[0].name.full() if attorneys.there_are_any else "" }
+  - "attorneys1_signature": ${ attorneys[0].signature if defined("attorneys[0].signature") else "" }
+  - "attorneys1_signature_date": ${ attorneys[0].signature_date.format() if defined("attorneys[0].signature_date") else "" }
+  - "attorneys1_bbo_number": ${ attorneys[0].bbo_number if defined("attorneys[0].bbo_number") else "" }
+  
+  - "attorneys2_name_full": ${ attorneys[1].name.full() if attorneys.there_are_any else "" }
+  - "attorneys2_signature": ${ attorneys[1].signature if defined("attorneys[1].signature") else "" }
+  - "attorneys2_signature_date": ${ attorneys[1].signature_date.format() if defined("attorneys[1].signature_date") else "" }
+  - "attorneys2_bbo_number": ${ attorneys[1].bbo_number if defined("attorneys[1].bbo_number") else "" }
+  
+  - "plaintiffs1_certify_plaintiff": ${ "Yes" if plaintiffs[0].certify_plaintiff else "No" }
+  - "attorneys1_certify_attorney": ${ "Yes" if attorneys[0].certify_attorney else "No" }
+---
