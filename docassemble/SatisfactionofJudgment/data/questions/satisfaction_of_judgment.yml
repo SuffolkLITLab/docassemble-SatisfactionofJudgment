@@ -93,7 +93,7 @@ code: |
       satisfaction_intro_done
   interview_order_satisfaction
 ---
-id: satisfaction_intro
+id: "satisfaction_intro 2"
 section: intro_section
 mandatory: true
 question: |
@@ -246,6 +246,7 @@ fields:
     required: true
 ---
 mandatory: True
+id: "is the plaintiff represented by an attorney"
 question: |
   Is the plaintiff represented by an attorney?
 fields:
@@ -336,6 +337,7 @@ review:
 continue button field: review_satisfaction_of_judgment_done
 ---
 continue button field: users.revisit
+id: "edit plaintiffs"
 question: |
   Edit plaintiffs
 subquestion: |
@@ -353,6 +355,7 @@ edit:
 confirm: True
 ---
 continue button field: attorneys.revisit
+id: "edit attorneys"
 question: |
   Edit attorneys
 subquestion: |
@@ -370,6 +373,7 @@ edit:
 confirm: True
 ---
 continue button field: other_parties.revisit
+id: "edit defendants"
 question: |
   Edit defendants
 subquestion: |
@@ -399,6 +403,7 @@ edit:
 confirm: True
 ---
 continue button field: other_parties.revisit
+id: "edit defendants 2"
 question: |
   Edit defendants
 subquestion: |
