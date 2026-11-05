@@ -259,7 +259,7 @@ fields:
 ---
 id: attorney_name
 section: case_information
-visible if: attorneys.there_are_any
+if: attorneys.there_are_any
 question: |
   Enter the attorney's name and BBO number.
 fields:
@@ -448,7 +448,7 @@ code: |
 ---
 id: plaintiff_certification
 section: plaintiff_certification
-visible if: not attorneys.there_are_any 
+if: not attorneys.there_are_any 
 question: |
   Plaintiff certification
 subquestion: |
@@ -460,13 +460,13 @@ fields:
 continue button field: plaintiff_certification_complete
 ---
 id: attorney_certification
+if: attorneys.there_are_any and attorneys.number_gathered() > 0
 section: attorney_certification
 mandatory: False
 question: |
   Attorney certification
 subquestion: |
   **As the plaintiff's attorney, you must certify that the judgment has been satisfied.**
-visible if: attorneys.there_are_any and attorneys.number_gathered() > 0
 fields:
   - "I certify that I am the plaintiff's attorney and that the judgment has been fully satisfied": attorneys[0].certify_attorney
     datatype: yesno
